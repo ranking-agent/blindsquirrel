@@ -7,7 +7,6 @@ class Neo4j:
         self.name_to_curie = {}
 
     def get_driver(self, db, pw):
-        print("get driver")
         return GraphDatabase.driver(f'bolt://{db}:7687', auth=('neo4j', pw))
 
     def get_name(self, curie):
@@ -32,11 +31,9 @@ class Neo4j:
         results = []
         curie = self.name_to_curie[name]
         with self.driver.session() as session:
-            print ("fq")
             forward_results = session.run(f'MATCH (a)-[r]->(b) WHERE a.id = "{curie}" RETURN type(r) as r, COUNT(b) as c')
             for result in forward_results:
                 results.append( (name, result['r'], result['c']) )
-            print ("rq")
             reverse_results = session.run(f'MATCH (a)<-[r]-(b) WHERE a.id = "{curie}" RETURN type(r) as r, COUNT(b) as c')
             for result in reverse_results:
                 results.append( (result['c'], result['r'], name) )
@@ -56,7 +53,6 @@ class Neo4j:
             curie = self.name_to_curie[edge[0]]
             with self.driver.session() as session:
                 cypher = f'MATCH (a)-[r:`{edge[1]}`]->(b) WHERE a.id = "{curie}" RETURN b.id as b, b.name as n'
-                print(cypher)
                 forward_results = session.run(cypher)
                 for result in forward_results:
                     self.name_to_curie[result['n']] = result['b']
